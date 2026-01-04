@@ -1,0 +1,29 @@
+
+MyHomeApp/
+├── App/
+│   └── MyHomeAppApp.swift
+│       (アプリの入り口)
+│
+├── Models/
+│   ├── AssetManage.swift
+│   └── AssetImage.swift
+│       (データ構造・SwiftDataのモデル)
+│
+├── Views/
+│   ├── Home/
+│   │   └── HomeView.swift
+│   │       (ホーム画面の機能)
+│   │
+│   └── Asset/
+│       ├── AssetManageListView.swift
+│       ├── AssetManageDetailView.swift
+│       └── AssetManageFormView.swift
+│           (資産管理の機能：一覧・詳細・編集)
+│
+├── Extensions/
+│   └── Color+Extensions.swift
+│       (便利な拡張機能)
+│
+└── Resources/
+    └── Assets.xcassets
+        (画像や色の定義ファイル)
