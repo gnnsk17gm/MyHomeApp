@@ -44,7 +44,6 @@ struct AssetManageDetailView: View {
         .fullScreenCover(isPresented: $isShowingEditView) {
             AssetManageFormView(assetToEdit: asset)
         }
-        // 写真をタップした時の全画面ビューワー
         .fullScreenCover(item: Binding(
             get: { selectedImageIndex != nil ? ImageIndexWrapper(index: selectedImageIndex!) : nil },
             set: { selectedImageIndex = $0?.index }
@@ -59,7 +58,9 @@ struct AssetManageDetailView: View {
                 
                 // --- 1. ヒーローエリア ---
                 VStack(spacing: 16.0) {
+                    // サムネイル部分に枠と影を適用
                     detailThumbnailView
+                        .shadow(color: Color.black.opacity(0.1), radius: 15.0, x: 0.0, y: 8.0)
                     
                     VStack(spacing: 8.0) {
                         detailCategoryBadge
@@ -70,13 +71,12 @@ struct AssetManageDetailView: View {
                             .foregroundStyle(Color.nordicText)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40.0)
-                            .padding(.vertical, 1.0)
                     }
                 }
                 .padding(.top, 20.0)
                 .frame(maxWidth: .infinity)
                 
-                // --- 2. スペック & リンク情報 (共通部品 FormRow を使用) ---
+                // --- 2. スペック & リンク情報 ---
                 VStack(spacing: 0.0) {
                     let visibleTypes = asset.infoOrder.filter { type in
                         switch type {
@@ -160,7 +160,6 @@ struct AssetManageDetailView: View {
                         
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)], spacing: 4) {
                             ForEach(Array(asset.images.enumerated()), id: \.element.id) { index, assetImage in
-                                // 共通部品 FormImageTile を使用（isEditing: false で削除ボタンなし）
                                 FormImageTile(data: assetImage.data, isEditing: false)
                                     .onTapGesture {
                                         selectedImageIndex = index
@@ -181,12 +180,24 @@ struct AssetManageDetailView: View {
     private var detailThumbnailView: some View {
         Group {
             if let data = asset.thumbnailImageData, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage).resizable().scaledToFill().frame(width: 140.0, height: 140.0).clipShape(Circle()).overlay(Circle().stroke(Color.white, lineWidth: 4))
+                // 写真の場合：白い枠を overlay で追加
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 140.0, height: 140.0)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
             } else {
+                // アイコンの場合：白い枠を overlay で追加
                 ZStack {
-                    Circle().fill(NordicTheme.iconColor(for: asset.categoryName).opacity(0.1)).frame(width: 140.0, height: 140.0)
-                    Image(systemName: asset.thumbnailIconName ?? "photo").font(.system(size: 60.0)).foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
-                }.overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    Circle()
+                        .fill(NordicTheme.iconColor(for: asset.categoryName).opacity(0.1))
+                        .frame(width: 140.0, height: 140.0)
+                    Image(systemName: asset.thumbnailIconName ?? "photo")
+                        .font(.system(size: 60.0))
+                        .foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
+                }
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
             }
         }
     }
@@ -206,13 +217,11 @@ struct AssetManageDetailView: View {
 
 // MARK: - 補助構造体 & ビュー
 
-/// fullScreenCover(item:) で使用するためのラッパー
 struct ImageIndexWrapper: Identifiable {
     let id = UUID()
     let index: Int
 }
 
-/// iPhoneの写真アプリ風の全画面画像ビューワー
 struct PhotoGalleryViewer: View {
     let images: [AssetImage]
     @State var selection: Int
@@ -235,7 +244,6 @@ struct PhotoGalleryViewer: View {
             .tabViewStyle(.page(indexDisplayMode: .always))
             .ignoresSafeArea()
             
-            // 閉じるボタン
             VStack {
                 HStack {
                     Spacer()

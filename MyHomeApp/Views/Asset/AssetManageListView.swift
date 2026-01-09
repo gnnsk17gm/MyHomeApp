@@ -43,6 +43,7 @@ struct AssetManageListView: View {
     
     var body: some View {
         NavigationStack {
+            // 背景色を全体に適用
             ZStack(alignment: .bottomTrailing) {
                 Color.nordicBackground.ignoresSafeArea()
                 
@@ -265,29 +266,31 @@ struct AssetCardRow: View {
     let asset: AssetManage
     
     var body: some View {
-        HStack(spacing: 16) {
-            thumbnailView
+        HStack(spacing: 0) {
+            // 左端のアクセントバー：カテゴリ色で表現
+            Rectangle()
+                .fill(NordicTheme.iconColor(for: asset.categoryName))
+                .frame(width: 6)
             
-            VStack(alignment: .leading, spacing: 4) {
-                Text(asset.name)
-                    .font(.system(.headline, design: .rounded))
-                    .foregroundStyle(Color.nordicText)
+            HStack(spacing: 16) {
+                thumbnailView
                 
-                HStack {
-                    Text(asset.categoryName)
-                        .font(.system(.caption, design: .rounded))
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(NordicTheme.iconColor(for: asset.categoryName).opacity(0.15))
-                        .foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
-                        .clipShape(Capsule())
-                    
-                    Spacer()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(asset.name)
+                        .font(.system(.headline, design: .rounded))
+                        .foregroundStyle(Color.nordicText)
+                        .lineLimit(1)
                 }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(Color.nordicSecondaryText.opacity(0.5))
             }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
         }
-        .padding(12)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
