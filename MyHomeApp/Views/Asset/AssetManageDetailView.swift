@@ -32,8 +32,13 @@ struct AssetManageDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
+                // --- 1. 状態変更時のアニメーション無効化 ---
                 Button {
-                    isShowingEditView = true
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true // アニメーションを無効化
+                    withTransaction(transaction) {
+                        isShowingEditView = true
+                    }
                 } label: {
                     Image(systemName: "pencil.circle.fill")
                         .font(.title3)
@@ -41,9 +46,20 @@ struct AssetManageDetailView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $isShowingEditView) {
+        // --- 2. 閉じる際のアニメーション無効化（カスタムBinding） ---
+        .fullScreenCover(isPresented: Binding(
+            get: { isShowingEditView },
+            set: { newValue in
+                var transaction = Transaction()
+                transaction.disablesAnimations = true // 閉じる際のアニメーションも無効化
+                withTransaction(transaction) {
+                    isShowingEditView = newValue
+                }
+            }
+        )) {
             AssetManageFormView(assetToEdit: asset)
         }
+        // 画像ギャラリー（こちらは標準のアニメーションを残してリッチな体験に）
         .fullScreenCover(item: Binding(
             get: { selectedImageIndex != nil ? ImageIndexWrapper(index: selectedImageIndex!) : nil },
             set: { selectedImageIndex = $0?.index }
@@ -56,9 +72,8 @@ struct AssetManageDetailView: View {
         ScrollView {
             VStack(spacing: 24.0) {
                 
-                // --- 1. ヒーローエリア ---
+                // --- ヒーローエリア ---
                 VStack(spacing: 16.0) {
-                    // サムネイル部分に枠と影を適用
                     detailThumbnailView
                         .shadow(color: Color.black.opacity(0.1), radius: 15.0, x: 0.0, y: 8.0)
                     
@@ -76,7 +91,7 @@ struct AssetManageDetailView: View {
                 .padding(.top, 20.0)
                 .frame(maxWidth: .infinity)
                 
-                // --- 2. スペック & リンク情報 ---
+                // --- スペック & リンク情報 (共通部品 FormRow を使用) ---
                 VStack(spacing: 0.0) {
                     let visibleTypes = asset.infoOrder.filter { type in
                         switch type {
@@ -135,7 +150,7 @@ struct AssetManageDetailView: View {
                 }
                 .nordicCard()
                 
-                // 3. メモ
+                // メモ
                 if let memo = asset.memo, !memo.isEmpty {
                     VStack(alignment: .leading, spacing: 12.0) {
                         HStack {
@@ -148,7 +163,7 @@ struct AssetManageDetailView: View {
                     .nordicCard()
                 }
                 
-                // 4. 写真ギャラリー
+                // 写真ギャラリー
                 if !asset.images.isEmpty {
                     VStack(alignment: .leading, spacing: 16.0) {
                         HStack {
@@ -180,24 +195,12 @@ struct AssetManageDetailView: View {
     private var detailThumbnailView: some View {
         Group {
             if let data = asset.thumbnailImageData, let uiImage = UIImage(data: data) {
-                // 写真の場合：白い枠を overlay で追加
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 140.0, height: 140.0)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                Image(uiImage: uiImage).resizable().scaledToFill().frame(width: 140.0, height: 140.0).clipShape(Circle()).overlay(Circle().stroke(Color.white, lineWidth: 4))
             } else {
-                // アイコンの場合：白い枠を overlay で追加
                 ZStack {
-                    Circle()
-                        .fill(NordicTheme.iconColor(for: asset.categoryName).opacity(0.1))
-                        .frame(width: 140.0, height: 140.0)
-                    Image(systemName: asset.thumbnailIconName ?? "photo")
-                        .font(.system(size: 60.0))
-                        .foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
-                }
-                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    Circle().fill(NordicTheme.iconColor(for: asset.categoryName).opacity(0.1)).frame(width: 140.0, height: 140.0)
+                    Image(systemName: asset.thumbnailIconName ?? "photo").font(.system(size: 60.0)).foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
+                }.overlay(Circle().stroke(Color.white, lineWidth: 4))
             }
         }
     }
@@ -215,7 +218,7 @@ struct AssetManageDetailView: View {
     }
 }
 
-// MARK: - 補助構造体 & ビュー
+// MARK: - 補助構造体 & ビュー (全画面ビューワー用)
 
 struct ImageIndexWrapper: Identifiable {
     let id = UUID()
