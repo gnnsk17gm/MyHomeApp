@@ -1,27 +1,16 @@
 
-// AssetManage.swift
-・Reference to member 'purchaseDate' cannot be resolved without a contextual type
-※maker、modelNumber、linkも同様のエラーが発生している。
-
-// AssetManageDetailView.swift
-・Referencing subscript 'subscript(dynamicMember:)' requires wrapper 'Bindable<AssetManage>'
-・Cannot find 'NordicCardStyle' in scope
-・Cannot find type 'InfoRowType' in scope
-・Cannot find 'NordicTheme' in scope
-・Generic parameter 'V' could not be inferred
-
 // AssetManageFormView.swift
-・Cannot find type 'EditImageItem' in scope
-・Cannot find type 'CroppingImage' in scope
-・Cannot find 'FormSaveButtonOverlay' in scope
-・Cannot find 'FormMainVisualSection' in scope
-・Cannot find 'NordicCardStyle' in scope
-・Cannot find 'FormInfoSection' in scope
-・Cannot find 'FormInfoSection' in scope
-・Cannot find 'FormMemoSection' in scope
-・Cannot find 'FormPhotosSection' in scope
-
 ・Cannot find 'IconPickerSheet' in scope
 ・Cannot find 'CategoryPickerSheet' in scope
 ・Cannot find 'ThumbnailCropperView' in scope
+・Cannot find 'InfoOrderDropDelegate' in scope
+
+・Cannot find 'FormMainVisualSection' in scope
+・Cannot find 'sortSection' in scope
+・Cannot find 'FormMemoSection' in scope
+・Cannot find 'FormPhotosSection' in scope
+
+・Cannot find 'NordicCardStyle' in scope
+・Cannot find 'FormInfoSection' in scope
+・Cannot find 'FormInfoSection' in scope
 ・Cannot find 'NordicTheme' in scope

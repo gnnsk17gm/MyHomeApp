@@ -63,10 +63,20 @@ struct FormInfoSection: View {
                 .popover(isPresented: $isDatePickerShowing) {
                     VStack {
                         DatePicker("日付を選択", selection: $purchaseDate, displayedComponents: .date)
-                            .datePickerStyle(.graphical).padding()
-                        Button("決定") { isDatePickerShowing = false }.font(.headline).padding()
+                            .datePickerStyle(.graphical)
+                            .padding()
+                            // ★ここがポイント！日本語ロケールを強制して「YYYY年MM月」表記にするよ✨
+                            .environment(\.locale, Locale(identifier: "ja_JP"))
+                            .environment(\.calendar, Calendar(identifier: .gregorian))
+                        
+                        Button("決定") {
+                            isDatePickerShowing = false
+                        }
+                        .font(.system(.headline, design: .rounded))
+                        .padding()
                     }
-                    .presentationDetents([.medium]).frame(minWidth: 320)
+                    .presentationDetents([.medium])
+                    .frame(minWidth: 320)
                 }
                 
             case .maker:
@@ -83,7 +93,6 @@ struct FormInfoSection: View {
                         .textFieldStyle(.plain)
                     Divider()
                     TextField("https://...", text: $url)
-                        .font(.system(.caption, design: .rounded)) // URLは少し小さめに
                         .textFieldStyle(.plain)
                         .keyboardType(.URL)
                         .autocapitalization(.none)

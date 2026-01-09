@@ -12,6 +12,7 @@ enum SortType: String, CaseIterable, Identifiable {
 }
 
 struct AssetManageListView: View {
+    @Environment(\.modelContext) var modelContext
     
     @State private var searchText: String = ""
     @State private var isShowingAddView = false
@@ -41,61 +42,66 @@ struct AssetManageListView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Color.nordicBackground.ignoresSafeArea()
-            
-            VStack(spacing: 0) {
+        NavigationStack {
+            ZStack(alignment: .bottomTrailing) {
+                Color.nordicBackground.ignoresSafeArea()
                 
-                // 1. カスタム検索バー
-                if isSearching {
-                    searchBarView
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                // 2. カテゴリチップ
-                categoryFilterScrollView
-                    .padding(.vertical, 8)
-                
-                // 3. メインコンテンツ
-                AssetListContent(searchText: searchText, sortType: selectedSortType, filterCategory: selectedCategory)
-            }
-            
-            // 4. フローティングアクションボタン (FAB)
-            addButton
-        }
-        .navigationTitle("資産一覧")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 12) {
-                    // 検索ボタン
-                    Button {
-                        withAnimation(.spring()) {
-                            isSearching.toggle()
-                            if !isSearching { searchText = "" }
-                        }
-                    } label: {
-                        Image(systemName: isSearching ? "xmark.circle.fill" : "magnifyingglass")
-                            .foregroundStyle(Color.nordicText)
+                VStack(spacing: 0) {
+                    // 1. カスタム検索バー
+                    if isSearching {
+                        searchBarView
+                            .transition(.move(edge: .top).combined(with: .opacity))
                     }
                     
-                    // 並び替えメニュー
-                    Menu {
-                        Picker("並び替え", selection: $selectedSortType) {
-                            ForEach(SortType.allCases) { type in
-                                Label(type.rawValue, systemImage: iconForSortType(type))
-                                    .tag(type)
+                    // 2. カテゴリチップ
+                    categoryFilterScrollView
+                        .padding(.vertical, 8)
+                    
+                    // 3. メインコンテンツ（Queryを制御するサブビュー）
+                    AssetListContent(
+                        searchText: searchText,
+                        sortType: selectedSortType,
+                        filterCategory: selectedCategory
+                    )
+                }
+                
+                // 4. フローティングアクションボタン (FAB)
+                addButton
+            }
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 12) {
+                        // 検索ボタン
+                        Button {
+                            withAnimation(.spring()) {
+                                isSearching.toggle()
+                                if !isSearching { searchText = "" }
                             }
+                        } label: {
+                            Image(systemName: isSearching ? "xmark.circle.fill" : "magnifyingglass")
+                                .foregroundStyle(Color.nordicText)
                         }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down.circle")
-                            .foregroundStyle(Color.nordicText)
+                        
+                        // 並び替えメニュー
+                        Menu {
+                            Picker("並び替え", selection: $selectedSortType) {
+                                ForEach(SortType.allCases) { type in
+                                    Label(type.rawValue, systemImage: iconForSortType(type))
+                                        .tag(type)
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down.circle")
+                                .foregroundStyle(Color.nordicText)
+                        }
                     }
                 }
             }
-        }
-        .fullScreenCover(isPresented: $isShowingAddView) {
-            AssetManageFormView()
+            .fullScreenCover(isPresented: $isShowingAddView) {
+                AssetManageFormView()
+            }
         }
     }
     
@@ -278,12 +284,6 @@ struct AssetCardRow: View {
                         .clipShape(Capsule())
                     
                     Spacer()
-                    
-                    if let days = Calendar.current.dateComponents([.day], from: asset.purchaseDate, to: Date()).day {
-                        Text("\(days)日目")
-                            .font(.system(.caption2, design: .rounded))
-                            .foregroundStyle(Color.nordicSecondaryText)
-                    }
                 }
             }
         }
@@ -296,7 +296,6 @@ struct AssetCardRow: View {
     @ViewBuilder
     private var thumbnailView: some View {
         if let data = asset.thumbnailImageData, let uiImage = UIImage(data: data) {
-            // Priority 1: 写真（円形にクリップ）
             Image(uiImage: uiImage)
                 .resizable()
                 .scaledToFill()
@@ -304,30 +303,14 @@ struct AssetCardRow: View {
                 .clipShape(Circle())
         } else {
             ZStack {
-                // 背景も円形に変更
                 Circle()
                     .fill(NordicTheme.iconColor(for: asset.categoryName).opacity(0.1))
                     .frame(width: 60, height: 60)
                 
-                // Priority 2: 手動設定アイコン
-                // Priority 3: カテゴリデフォルトアイコン
                 Image(systemName: asset.thumbnailIconName ?? NordicTheme.categoryIcon(for: asset.categoryName))
                     .font(.title3)
                     .foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
             }
         }
-    }
-}
-
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: AssetManage.self, configurations: config)
-    let sample = AssetManage(name: "お気に入りのケトル", purchaseDate: Date().addingTimeInterval(-86400 * 10), categoryName: "キッチン")
-    sample.thumbnailIconName = "star.fill"
-    container.mainContext.insert(sample)
-
-    return NavigationStack {
-        AssetManageListView()
-            .modelContainer(container)
     }
 }

@@ -6,6 +6,7 @@ struct AssetManageDetailView: View {
     
     // 編集画面の表示フラグ
     @State private var isShowingEditView = false
+    // 全画面画像ビューワーの表示管理
     @State private var selectedImageIndex: Int? = nil
     
     init(asset: AssetManage) {
@@ -43,6 +44,13 @@ struct AssetManageDetailView: View {
         .fullScreenCover(isPresented: $isShowingEditView) {
             AssetManageFormView(assetToEdit: asset)
         }
+        // 写真をタップした時の全画面ビューワー
+        .fullScreenCover(item: Binding(
+            get: { selectedImageIndex != nil ? ImageIndexWrapper(index: selectedImageIndex!) : nil },
+            set: { selectedImageIndex = $0?.index }
+        )) { wrapper in
+            PhotoGalleryViewer(images: asset.images, selection: wrapper.index)
+        }
     }
     
     private var detailContentView: some View {
@@ -68,12 +76,11 @@ struct AssetManageDetailView: View {
                 .padding(.top, 20.0)
                 .frame(maxWidth: .infinity)
                 
-                // --- 2. スペック & リンク情報 (動的な並び替えに対応) ---
+                // --- 2. スペック & リンク情報 (共通部品 FormRow を使用) ---
                 VStack(spacing: 0.0) {
-                    // 保存されている infoOrder に基づいて表示
                     let visibleTypes = asset.infoOrder.filter { type in
                         switch type {
-                        case .purchaseDate: return true // 日付は常に表示
+                        case .purchaseDate: return true
                         case .maker: return asset.maker != nil && !asset.maker!.isEmpty
                         case .modelNumber: return asset.modelNumber != nil && !asset.modelNumber!.isEmpty
                         case .link: return asset.url != nil && !asset.url!.isEmpty
@@ -84,11 +91,9 @@ struct AssetManageDetailView: View {
                         Group {
                             switch type {
                             case .purchaseDate:
-                                detailInfoRow(icon: type.iconName, title: type.displayName) {
+                                FormRow(icon: type.iconName, title: type.displayName) {
                                     HStack {
                                         Text(asset.purchaseDate.formatted(date: .numeric, time: .omitted))
-                                            .font(.system(.body, design: .rounded))
-                                            .fontWeight(.medium)
                                         Spacer()
                                         if let duration = NordicTheme.timeSincePurchase(from: asset.purchaseDate) {
                                             Text(duration)
@@ -100,20 +105,20 @@ struct AssetManageDetailView: View {
                                     }
                                 }
                             case .maker:
-                                detailInfoRow(icon: type.iconName, title: type.displayName) {
-                                    Text(asset.maker ?? "").font(.system(.body, design: .rounded)).fontWeight(.medium)
+                                FormRow(icon: type.iconName, title: type.displayName) {
+                                    Text(asset.maker ?? "")
                                 }
                             case .modelNumber:
-                                detailInfoRow(icon: type.iconName, title: type.displayName) {
-                                    Text(asset.modelNumber ?? "").font(.system(.body, design: .rounded)).fontWeight(.medium)
+                                FormRow(icon: type.iconName, title: type.displayName) {
+                                    Text(asset.modelNumber ?? "")
                                 }
                             case .link:
                                 if let urlString = asset.url, let url = URL(string: urlString) {
                                     Link(destination: url) {
-                                        detailInfoRow(icon: type.iconName, title: type.displayName) {
+                                        FormRow(icon: type.iconName, title: type.displayName) {
                                             HStack {
                                                 Text(asset.urlTitle?.isEmpty == false ? asset.urlTitle! : "公式サイトをみる")
-                                                    .font(.system(.body, design: .rounded)).fontWeight(.bold).foregroundStyle(Color.nordicBlue)
+                                                    .fontWeight(.bold).foregroundStyle(Color.nordicBlue)
                                                 Spacer()
                                                 Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(Color.nordicBlue)
                                             }
@@ -122,16 +127,15 @@ struct AssetManageDetailView: View {
                                 }
                             }
                             
-                            // 最後の要素以外に区切り線を入れる
                             if index < visibleTypes.count - 1 {
                                 Divider().padding(.leading, 56.0)
                             }
                         }
                     }
                 }
-                .modifier(NordicCardStyle())
+                .nordicCard()
                 
-                // 3. メモ（既存の実装）
+                // 3. メモ
                 if let memo = asset.memo, !memo.isEmpty {
                     VStack(alignment: .leading, spacing: 12.0) {
                         HStack {
@@ -141,10 +145,10 @@ struct AssetManageDetailView: View {
                         Text(memo).font(.system(.body, design: .rounded)).foregroundStyle(Color.nordicText).lineSpacing(6.0)
                     }
                     .padding(24.0).frame(maxWidth: .infinity, alignment: .leading)
-                    .modifier(NordicCardStyle())
+                    .nordicCard()
                 }
                 
-                // 4. 写真ギャラリー（既存の実装）
+                // 4. 写真ギャラリー
                 if !asset.images.isEmpty {
                     VStack(alignment: .leading, spacing: 16.0) {
                         HStack {
@@ -156,18 +160,16 @@ struct AssetManageDetailView: View {
                         
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)], spacing: 4) {
                             ForEach(Array(asset.images.enumerated()), id: \.element.id) { index, assetImage in
-                                if let uiImage = UIImage(data: assetImage.data) {
-                                    Button { selectedImageIndex = index } label: {
-                                        Color.clear.aspectRatio(1.0, contentMode: .fit)
-                                            .overlay(Image(uiImage: uiImage).resizable().scaledToFill())
-                                            .clipShape(RoundedRectangle(cornerRadius: 12.0, style: .continuous))
+                                // 共通部品 FormImageTile を使用（isEditing: false で削除ボタンなし）
+                                FormImageTile(data: assetImage.data, isEditing: false)
+                                    .onTapGesture {
+                                        selectedImageIndex = index
                                     }
-                                }
                             }
                         }
                     }
                     .padding(24.0)
-                    .modifier(NordicCardStyle())
+                    .nordicCard()
                 }
                 
                 Spacer().frame(height: 60.0)
@@ -200,18 +202,54 @@ struct AssetManageDetailView: View {
         .foregroundStyle(NordicTheme.iconColor(for: asset.categoryName))
         .clipShape(Capsule())
     }
+}
+
+// MARK: - 補助構造体 & ビュー
+
+/// fullScreenCover(item:) で使用するためのラッパー
+struct ImageIndexWrapper: Identifiable {
+    let id = UUID()
+    let index: Int
+}
+
+/// iPhoneの写真アプリ風の全画面画像ビューワー
+struct PhotoGalleryViewer: View {
+    let images: [AssetImage]
+    @State var selection: Int
+    @Environment(\.dismiss) var dismiss
     
-    private func detailInfoRow<Content: View>(icon: String, title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 16.0) {
-            ZStack {
-                Circle().fill(Color.nordicSecondaryBackground).frame(width: 40.0, height: 40.0)
-                Image(systemName: icon).font(.system(size: 16.0)).foregroundStyle(Color.nordicSecondaryText)
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            TabView(selection: $selection) {
+                ForEach(Array(images.enumerated()), id: \.element.id) { index, assetImage in
+                    if let uiImage = UIImage(data: assetImage.data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .tag(index)
+                    }
+                }
             }
-            VStack(alignment: .leading, spacing: 2.0) {
-                Text(title).font(.system(.caption, design: .rounded)).foregroundStyle(Color.nordicSecondaryText)
-                content().foregroundStyle(Color.nordicText)
+            .tabViewStyle(.page(indexDisplayMode: .always))
+            .ignoresSafeArea()
+            
+            // 閉じるボタン
+            VStack {
+                HStack {
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 30))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .padding()
+                    }
+                }
+                Spacer()
             }
-            Spacer()
-        }.padding(16.0)
+        }
     }
 }

@@ -38,7 +38,7 @@ final class AssetManage {
     var categoryName: String
     var memo: String?
     
-    /// 項目の表示順序を保持する（デフォルトは定義順）
+    /// 項目の表示順序を保持する（デフォルトは CaseIterable の順）
     var infoOrder: [AssetInfoType] = AssetInfoType.allCases
     
     @Relationship(deleteRule: .cascade) var images: [AssetImage] = []
