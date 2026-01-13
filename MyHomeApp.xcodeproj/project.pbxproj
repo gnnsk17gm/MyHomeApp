@@ -10,22 +10,9 @@
 		330A285B2EC99E6800F7AAC8 /* MyHomeApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyHomeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		330A28742ECA0D0000F7AAC8 /* Exceptions for "MyHomeApp" folder in "MyHomeApp" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				work.txt,
-			);
-			target = 330A285A2EC99E6800F7AAC8 /* MyHomeApp */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		330A285D2EC99E6800F7AAC8 /* MyHomeApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				330A28742ECA0D0000F7AAC8 /* Exceptions for "MyHomeApp" folder in "MyHomeApp" target */,
-			);
 			path = MyHomeApp;
 			sourceTree = "<group>";
 		};
